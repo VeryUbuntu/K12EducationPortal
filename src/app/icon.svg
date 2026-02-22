@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Simplified version of the SXU Logo for small tab icon visibility -->
+  <rect x="10" y="65" width="22" height="25" fill="#0047AB"/>
+  <rect x="40" y="35" width="22" height="55" fill="#0047AB"/>
+  <rect x="70" y="5" width="22" height="85" fill="#00E5EE"/>
+  <path d="M5 95 H95" stroke="#0047AB" stroke-width="10" stroke-linecap="round"/>
+</svg>

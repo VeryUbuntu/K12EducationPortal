@@ -19,9 +19,10 @@ export default async function Navbar() {
     return (
         <nav className="border-b bg-white sticky top-0 z-50 shadow-sm">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-6xl">
-                <Link href="/" className="text-xl font-bold text-primary flex items-baseline tracking-tight hover:opacity-80 transition-opacity">
+                <Link href="/" className="text-xl font-bold text-primary flex items-center tracking-tight hover:opacity-80 transition-opacity">
+                    <img src="/logo.svg" alt="SXU.com Logo" className="h-8 w-8 mr-2" />
                     SXU.com
-                    <span className="hidden sm:inline-block text-sm text-slate-400 font-medium ml-3">K12 Education Portal</span>
+                    <span className="hidden sm:inline-block text-sm text-slate-400 font-medium ml-3 self-end md:-mb-0.5">K12 Education Portal</span>
                 </Link>
                 <div className="flex items-center space-x-4">
                     {user ? (

@@ -39,7 +39,23 @@ function AuthForm() {
             })
 
             if (error) {
-                setMessage({ type: 'error', text: `注册出错: ${error.message}` })
+                if (error.message.includes('User already registered') || error.message.includes('already exists')) {
+                    // 如果用户已存在但可能没验证，尝试重发验证码
+                    const { error: resendError } = await supabase.auth.resend({
+                        type: 'signup',
+                        email: email
+                    })
+                    if (resendError && !resendError.message.includes('security purposes')) {
+                        // Resend also failed
+                        setMessage({ type: 'error', text: `重发验证码失败: ${resendError.message}` })
+                    } else {
+                        // Supabase handles rate limits by silently returning success sometimes, but we proceed to verity step
+                        setMessage({ type: 'success', text: '该帐号已注册但未验证，验证码已重新发送，请查收！' })
+                        setStep('verify')
+                    }
+                } else {
+                    setMessage({ type: 'error', text: `注册出错: ${error.message}` })
+                }
             } else {
                 setMessage({ type: 'success', text: '已向您的邮箱发送了数字验证码，请查收！' })
                 setStep('verify') // 进入验证码输入步骤
