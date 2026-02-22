@@ -35,27 +35,33 @@ export function MarkdownEditor({
         if (!file.type.startsWith('image/')) return
         setIsUploading(true)
 
-        // insert loading placeholder
-        const placeholderText = `\n![Uploading image...]()\n`
+        const uniqueId = Math.random().toString(36).substring(7)
+        const placeholderText = `\n![正在上传图片... ${uniqueId}]()\n`
         insertTextAtCursor(placeholderText)
 
         try {
-            const ext = file.name ? file.name.split('.').pop() : 'png'
+            const ext = file.name && file.name.includes('.') ? file.name.split('.').pop() : 'png'
             const filename = `${uuidv4()}.${ext}`
-            const { error } = await supabase.storage
-                .from('resource_images')
-                .upload(filename, file)
 
-            if (error) throw error
+            const formData = new FormData()
+            formData.append('file', file)
+            formData.append('filename', filename)
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('resource_images')
-                .getPublicUrl(filename)
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
 
+            if (!res.ok) {
+                const errorData = await res.json()
+                throw new Error(errorData.error || 'Upload failed')
+            }
+
+            const { publicUrl } = await res.json()
             setValue(prev => prev.replace(placeholderText, `\n![图片](${publicUrl})\n`))
         } catch (error) {
             console.error("Upload failed", error)
-            setValue(prev => prev.replace(placeholderText, `\n<!-- Upload failed -->\n`))
+            setValue(prev => prev.replace(placeholderText, `\n<!-- 图片上传失败: 请检查网络或控制台报错 -->\n`))
         } finally {
             setIsUploading(false)
         }
