@@ -57,7 +57,7 @@ export default async function ResourcesAdminPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="description">资源一句话介绍</Label>
-                                <Input id="description" name="description" placeholder="精选外部学习网站记录..." />
+                                <textarea id="description" name="description" placeholder="精选外部学习网站记录..." rows={3} className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="url">访问链接 (外部URL或本地路径)</Label>
