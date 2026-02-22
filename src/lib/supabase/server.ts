@@ -1,8 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 
 export async function createClient() {
     const cookieStore = await cookies()
+    const headersList = await headers()
+    const hostname = headersList.get('host') || ''
 
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +18,7 @@ export async function createClient() {
                     try {
                         cookiesToSet.forEach(({ name, value, options }) => {
                             // Automatically share session token to .sxu.com in production, enabling Eduflow SSO.
-                            const domain = process.env.NODE_ENV === 'production' && !options.domain?.includes('localhost')
+                            const domain = process.env.NODE_ENV === 'production' && hostname.includes('sxu.com')
                                 ? '.sxu.com'
                                 : options.domain
                             cookieStore.set(name, value, { ...options, domain })

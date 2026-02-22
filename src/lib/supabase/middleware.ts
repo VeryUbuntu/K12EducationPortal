@@ -20,7 +20,8 @@ export async function updateSession(request: NextRequest) {
                         request,
                     })
                     cookiesToSet.forEach(({ name, value, options }) => {
-                        const domain = process.env.NODE_ENV === 'production' && !options.domain?.includes('localhost')
+                        const hostname = request.headers.get('host') || ''
+                        const domain = process.env.NODE_ENV === 'production' && hostname.includes('sxu.com')
                             ? '.sxu.com'
                             : options.domain
                         supabaseResponse.cookies.set(name, value, { ...options, domain })

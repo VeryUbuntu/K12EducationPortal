@@ -2,7 +2,7 @@ import { createBrowserClient } from '@supabase/ssr'
 
 export function createClient() {
     let effectiveDomain: string | undefined = undefined;
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && !window.location.hostname.includes('localhost')) {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && window.location.hostname.endsWith('sxu.com')) {
         effectiveDomain = '.sxu.com';
     }
 
