@@ -15,7 +15,7 @@ export async function addSlide(formData: FormData) {
         title, description, image_url, link_url, sort_order
     })
 
-    revalidatePath('/')
+    revalidatePath('/', 'page')
     revalidatePath('/admin/carousel')
 }
 
@@ -23,6 +23,6 @@ export async function deleteSlide(id: string) {
     const supabase = await createClient()
     await supabase.from('carousel_slides').delete().eq('id', id)
 
-    revalidatePath('/')
+    revalidatePath('/', 'page')
     revalidatePath('/admin/carousel')
 }

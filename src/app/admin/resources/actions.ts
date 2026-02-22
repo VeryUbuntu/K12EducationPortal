@@ -43,7 +43,9 @@ export async function addResource(formData: FormData) {
         throw new Error(`Failed to add resource: ${error.message}`)
     }
 
-    revalidatePath('/', 'layout')
+    revalidatePath('/admin/resources')
+    revalidatePath('/', 'page')
+    revalidatePath('/[stage]/[subject]', 'page')
     redirect(`/admin/resources?_t=${Date.now()}`)
 }
 
@@ -53,7 +55,9 @@ export async function deleteResource(id: string) {
 
     await adminSupabase.from('resources').delete().eq('id', id)
 
-    revalidatePath('/', 'layout')
+    revalidatePath('/admin/resources')
+    revalidatePath('/', 'page')
+    revalidatePath('/[stage]/[subject]', 'page')
     redirect(`/admin/resources?_t=${Date.now()}`)
 }
 
@@ -78,6 +82,8 @@ export async function updateResource(id: string, formData: FormData) {
         throw new Error(`Failed to update resource: ${error.message}`)
     }
 
-    revalidatePath('/', 'layout')
+    revalidatePath('/admin/resources')
+    revalidatePath('/', 'page')
+    revalidatePath('/[stage]/[subject]', 'page')
     redirect(`/admin/resources?_t=${Date.now()}`)
 }

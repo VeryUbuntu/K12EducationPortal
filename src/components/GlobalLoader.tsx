@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import * as LucideIcons from 'lucide-react'
 
@@ -8,14 +8,20 @@ function GlobalLoaderInner() {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const [isLoading, setIsLoading] = useState(false)
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     // Automatically hide spinner on route change
     useEffect(() => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
         setIsLoading(false)
     }, [pathname, searchParams])
 
     useEffect(() => {
-        const handleStartLoading = () => setIsLoading(true)
+        const handleStartLoading = () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current)
+            // Wait 200ms before showing loader. Instant Next.js cache hits will never show it!
+            timeoutRef.current = setTimeout(() => setIsLoading(true), 200)
+        }
 
         // Intercept native navigation clicks
         const handleAnchorClick = (e: MouseEvent) => {
@@ -40,7 +46,10 @@ function GlobalLoaderInner() {
         const handleFormSubmit = () => {
             handleStartLoading()
             // Failsafe limit for forms to prevent infinite un-dismissible loading lock
-            setTimeout(() => setIsLoading(false), 8000)
+            setTimeout(() => {
+                if (timeoutRef.current) clearTimeout(timeoutRef.current)
+                setIsLoading(false)
+            }, 8000)
         }
 
         document.addEventListener('click', handleAnchorClick, true)
