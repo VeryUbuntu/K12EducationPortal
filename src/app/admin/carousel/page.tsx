@@ -46,9 +46,19 @@ export default async function CarouselAdminPage() {
                                 <Label htmlFor="image_url">图片地址 (Image URL/相对路径)</Label>
                                 <Input id="image_url" name="image_url" placeholder="/images/banner1.jpg 或 http..." required />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="link_url">跳转指向 (Link URL)</Label>
-                                <Input id="link_url" name="link_url" placeholder="/primary/math" required />
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="link_url">跳转指向 (Link URL)</Label>
+                                    <Input id="link_url" name="link_url" placeholder="/primary/math" required />
+                                </div>
+                                <div className="bg-blue-50/50 p-3 rounded text-sm text-blue-700/80 border border-blue-100">
+                                    <p className="font-semibold mb-1">💡 推荐链接写法：</p>
+                                    <ul className="list-disc pl-5 space-y-1">
+                                        <li>跳转到单独创建的资源介绍页：<code className="bg-white px-1 py-0.5 rounded">/resource/资源的UUID</code> <span className="text-rose-500 font-semibold">(强烈推荐！可支持权限阻挡保护)</span></li>
+                                        <li>跳转到原生Nginx托管组件：<code className="bg-white px-1 py-0.5 rounded">/periodic/</code> <span className="text-xs">(注：必须以/结尾)</span></li>
+                                        <li>跳转到分类频道页：<code className="bg-white px-1 py-0.5 rounded">/primary/math</code></li>
+                                    </ul>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="sort_order">排序 (数字越小越靠前)</Label>

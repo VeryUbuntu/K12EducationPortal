@@ -83,16 +83,11 @@ export default async function SubjectPage(props: { params: Promise<{ stage: stri
                                     <MarkdownRenderer content={res.description || ''} />
                                 </div>
 
-                                {/* Auth Guarding the Resource Link */}
-                                {res.access_level === 'registered' && !user ? (
-                                    <Link href={`/login?next=/${stage}/${subject}`}>
-                                        <Button className="w-full" variant="secondary">登录后访问</Button>
-                                    </Link>
-                                ) : (
-                                    <a href={res.url} target="_blank" rel="noopener noreferrer">
-                                        <Button className="w-full" variant="default">直接访问</Button>
-                                    </a>
-                                )}
+                                <Link href={`/resource/${res.id}`} className="block w-full">
+                                    <Button className="w-full group/btn" variant="default">
+                                        查看资源详情 <LucideIcons.ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                                    </Button>
+                                </Link>
                             </CardContent>
                         </Card>
                     )

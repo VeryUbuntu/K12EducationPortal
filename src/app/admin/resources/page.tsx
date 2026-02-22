@@ -72,8 +72,11 @@ export default async function ResourcesAdminPage() {
                                     </select>
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
-                                    <Label htmlFor="url">访问链接 (外部URL或本地相对路径)</Label>
-                                    <Input id="url" name="url" placeholder="https:// 或 /chemistry/" required />
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="url">访问链接 (外部URL或本地相对路径)</Label>
+                                        <span className="text-xs text-muted-foreground flex items-center"><LucideIcons.Info className="w-3 h-3 mr-1" /> 若为Nginx原生托管应用，需以/结尾，如: <code className="ml-1 bg-slate-100 px-1 rounded">/periodic/</code></span>
+                                    </div>
+                                    <Input id="url" name="url" placeholder="https:// 或 /periodic/" required />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
                                     <Label htmlFor="description">资源介绍</Label>

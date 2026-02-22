@@ -40,7 +40,7 @@ export function FeaturedCarousel({ slides }: { slides: Slide[] }) {
                 <CarouselContent>
                     {slides.map((slide) => (
                         <CarouselItem key={slide.id}>
-                            <Link href={slide.link_url} className="block group">
+                            <a href={slide.link_url} className="block group">
                                 <Card className="border-0 shadow-lg overflow-hidden group-hover:ring-4 ring-primary/20 transition-all rounded-2xl">
                                     <CardContent className="p-0 relative h-[300px] sm:h-[400px]">
                                         <img
@@ -56,7 +56,7 @@ export function FeaturedCarousel({ slides }: { slides: Slide[] }) {
                                         </div>
                                     </CardContent>
                                 </Card>
-                            </Link>
+                            </a>
                         </CarouselItem>
                     ))}
                 </CarouselContent>
