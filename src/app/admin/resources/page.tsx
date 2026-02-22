@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { addResource, deleteResource } from './actions'
 import * as LucideIcons from 'lucide-react'
+import { MarkdownEditor } from '@/components/MarkdownEditor'
+import { MarkdownRenderer } from '@/components/MarkdownRenderer'
 
 export default async function ResourcesAdminPage() {
     const supabase = await createClient()
@@ -73,8 +75,11 @@ export default async function ResourcesAdminPage() {
                                     <Input id="url" name="url" placeholder="https:// 或 /chemistry/" required />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
-                                    <Label htmlFor="description">资源一句话介绍</Label>
-                                    <textarea id="description" name="description" placeholder="精选外部学习网站记录..." rows={4} className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                                    <Label htmlFor="description">资源介绍</Label>
+                                    <MarkdownEditor
+                                        name="description"
+                                        placeholder="详细介绍该资源，支持 markdown 和图片粘贴..."
+                                    />
                                 </div>
                             </div>
 
@@ -109,7 +114,9 @@ export default async function ResourcesAdminPage() {
                                 </CardHeader>
                                 <CardContent className="flex flex-col justify-between gap-4 h-full">
                                     <div>
-                                        <p className="text-sm text-slate-500 mb-2">{res.description}</p>
+                                        <div className="mb-2 max-h-[150px] overflow-y-auto">
+                                            <MarkdownRenderer content={res.description || ''} />
+                                        </div>
                                         <p className="text-xs font-mono bg-slate-100 px-2 py-1 rounded inline-block text-slate-500 max-w-full truncate">
                                             {res.url}
                                         </p>

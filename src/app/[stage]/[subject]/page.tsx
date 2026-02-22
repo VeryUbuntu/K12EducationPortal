@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import * as LucideIcons from 'lucide-react'
+import { MarkdownRenderer } from '@/components/MarkdownRenderer'
 
 export default async function SubjectPage(props: { params: Promise<{ stage: string, subject: string }> }) {
     const { stage, subject } = await props.params
@@ -78,7 +79,9 @@ export default async function SubjectPage(props: { params: Promise<{ stage: stri
                             </CardHeader>
 
                             <CardContent className="flex-1 flex flex-col">
-                                <p className="text-sm text-muted-foreground mb-4 flex-1">{res.description}</p>
+                                <div className="mb-4 flex-1">
+                                    <MarkdownRenderer content={res.description || ''} />
+                                </div>
 
                                 {/* Auth Guarding the Resource Link */}
                                 {res.access_level === 'registered' && !user ? (
@@ -86,9 +89,9 @@ export default async function SubjectPage(props: { params: Promise<{ stage: stri
                                         <Button className="w-full" variant="secondary">登录后访问</Button>
                                     </Link>
                                 ) : (
-                                    <Link href={res.url} target="_blank" rel="noopener noreferrer">
+                                    <a href={res.url} target="_blank" rel="noopener noreferrer">
                                         <Button className="w-full" variant="default">直接访问</Button>
-                                    </Link>
+                                    </a>
                                 )}
                             </CardContent>
                         </Card>
