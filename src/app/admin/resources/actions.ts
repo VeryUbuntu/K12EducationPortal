@@ -44,6 +44,7 @@ export async function addResource(formData: FormData) {
     }
 
     revalidatePath('/', 'layout')
+    redirect(`/admin/resources?_t=${Date.now()}`)
 }
 
 export async function deleteResource(id: string) {
@@ -53,6 +54,7 @@ export async function deleteResource(id: string) {
     await adminSupabase.from('resources').delete().eq('id', id)
 
     revalidatePath('/', 'layout')
+    redirect(`/admin/resources?_t=${Date.now()}`)
 }
 
 export async function updateResource(id: string, formData: FormData) {
@@ -77,5 +79,5 @@ export async function updateResource(id: string, formData: FormData) {
     }
 
     revalidatePath('/', 'layout')
-    redirect('/admin/resources')
+    redirect(`/admin/resources?_t=${Date.now()}`)
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import { PageTracker } from "@/components/PageTracker";
+import { GlobalLoader } from "@/components/GlobalLoader";
 import "./globals.css";
 export const metadata: Metadata = {
   title: "SXU.com - K12 Education Portal",
@@ -16,6 +17,7 @@ export default function RootLayout({
     <html lang="zh">
       <body className="font-sans antialiased flex flex-col min-h-screen bg-slate-50 text-slate-900">
         <PageTracker />
+        <GlobalLoader />
         <Navbar />
         <main className="flex-1 w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
           {children}
