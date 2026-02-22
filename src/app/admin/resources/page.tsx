@@ -7,6 +7,7 @@ import { addResource, deleteResource } from './actions'
 import * as LucideIcons from 'lucide-react'
 import { MarkdownEditor } from '@/components/MarkdownEditor'
 import { MarkdownRenderer } from '@/components/MarkdownRenderer'
+import Link from 'next/link'
 
 export default async function ResourcesAdminPage() {
     const supabase = await createClient()
@@ -121,7 +122,12 @@ export default async function ResourcesAdminPage() {
                                             {res.url}
                                         </p>
                                     </div>
-                                    <div className="pt-2 flex justify-end">
+                                    <div className="pt-2 flex justify-end gap-2">
+                                        <Link href={`/admin/resources/${res.id}/edit`}>
+                                            <Button variant="outline" size="sm" type="button" className="text-slate-500 hover:text-primary hover:bg-slate-50">
+                                                <LucideIcons.Edit className="w-4 h-4 mr-2" /> 编辑
+                                            </Button>
+                                        </Link>
                                         <form action={async () => {
                                             'use server'
                                             await deleteResource(res.id)
