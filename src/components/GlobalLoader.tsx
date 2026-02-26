@@ -20,7 +20,14 @@ function GlobalLoaderInner() {
         const handleStartLoading = () => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current)
             // Wait 200ms before showing loader. Instant Next.js cache hits will never show it!
-            timeoutRef.current = setTimeout(() => setIsLoading(true), 200)
+            timeoutRef.current = setTimeout(() => {
+                setIsLoading(true)
+                // Failsafe to violently kill the loader after 6 seconds if Next.js routing dies or dev compilation hangs
+                setTimeout(() => {
+                    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+                    setIsLoading(false)
+                }, 6000)
+            }, 200)
         }
 
         // Intercept native navigation clicks
@@ -30,8 +37,8 @@ function GlobalLoaderInner() {
             const href = target.getAttribute('href')
             if (!href) return
 
-            // Ignore external and special actions
-            if (target.getAttribute('target') === '_blank' || href.startsWith('#') || e.metaKey || e.ctrlKey || e.shiftKey) return
+            // Ignore external and special actions, and downloads
+            if (target.getAttribute('target') === '_blank' || target.hasAttribute('download') || href.startsWith('#') || e.metaKey || e.ctrlKey || e.shiftKey) return
 
             if (href.startsWith('/') || href.startsWith(window.location.origin)) {
                 // If it resolves back to identical URL, don't spin
@@ -45,11 +52,6 @@ function GlobalLoaderInner() {
         // Intercept form submissions
         const handleFormSubmit = () => {
             handleStartLoading()
-            // Failsafe limit for forms to prevent infinite un-dismissible loading lock
-            setTimeout(() => {
-                if (timeoutRef.current) clearTimeout(timeoutRef.current)
-                setIsLoading(false)
-            }, 8000)
         }
 
         document.addEventListener('click', handleAnchorClick, true)
