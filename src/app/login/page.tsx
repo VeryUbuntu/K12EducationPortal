@@ -29,75 +29,74 @@ function AuthForm() {
         setLoading(true)
         setMessage({ type: '', text: '' })
 
-        const supabase = createClient()
+        try {
+            const supabase = createClient()
 
-        if (mode === 'register') {
-            // 注册逻辑：提供邮箱和密码，Supabase 会向邮箱发送数字验证码 (Token)
-            const { error } = await supabase.auth.signUp({
-                email,
-                password,
-            })
+            if (mode === 'register') {
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                })
 
-            if (error) {
-                if (error.message.includes('User already registered') || error.message.includes('already exists')) {
-                    // 如果用户已存在但可能没验证，尝试重发验证码
-                    const { error: resendError } = await supabase.auth.resend({
-                        type: 'signup',
-                        email: email
-                    })
-                    if (resendError && !resendError.message.includes('security purposes')) {
-                        // Resend also failed
-                        setMessage({ type: 'error', text: `重发验证码失败: ${resendError.message}` })
+                if (error) {
+                    if (error.message.includes('User already registered') || error.message.includes('already exists')) {
+                        const { error: resendError } = await supabase.auth.resend({
+                            type: 'signup',
+                            email: email
+                        })
+                        if (resendError && !resendError.message.includes('security purposes')) {
+                            setMessage({ type: 'error', text: `重发验证码失败: ${resendError.message}` })
+                        } else {
+                            setMessage({ type: 'success', text: '该帐号已注册但未验证，验证码已重新发送，请查收！' })
+                            setStep('verify')
+                        }
                     } else {
-                        // Supabase handles rate limits by silently returning success sometimes, but we proceed to verity step
-                        setMessage({ type: 'success', text: '该帐号已注册但未验证，验证码已重新发送，请查收！' })
-                        setStep('verify')
+                        setMessage({ type: 'error', text: `注册出错: ${error.message}` })
                     }
                 } else {
-                    setMessage({ type: 'error', text: `注册出错: ${error.message}` })
+                    setMessage({ type: 'success', text: '已向您的邮箱发送了数字验证码，请查收！' })
+                    setStep('verify')
                 }
-            } else {
-                setMessage({ type: 'success', text: '已向您的邮箱发送了数字验证码，请查收！' })
-                setStep('verify') // 进入验证码输入步骤
-            }
-        } else if (mode === 'reset') {
-            // 忘记密码逻辑：发送密码重置邮件
-            const { error } = await supabase.auth.resetPasswordForEmail(email)
+            } else if (mode === 'reset') {
+                const { error } = await supabase.auth.resetPasswordForEmail(email)
 
-            if (error) {
-                setMessage({ type: 'error', text: `发送重置邮件失败: ${error.message}` })
-            } else {
-                setMessage({ type: 'success', text: '密码重置验证码已发送至您的邮箱！' })
-                setStep('verify') // 进入验证码及新密码输入步骤
-            }
-        } else {
-            // 登录逻辑：使用邮箱和密码登录
-            // 如果你希望每次登录都「强制」用验证码，可以切换为 supabase.auth.signInWithOtp({ email })
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            })
-
-            if (error) {
-                // 如果报错可能是邮箱未验证，可以提供再次发送验证码的按钮
-                if (error.message.includes('Email not confirmed')) {
-                    setMessage({ type: 'error', text: `邮箱未验证，请先验证。` })
-                    // 如果需要，可以自动发送 OTP 并跳转
-                    const { error: resendError } = await supabase.auth.resend({
-                        type: 'signup',
-                        email: email
-                    })
-                    if (!resendError) setStep('verify')
+                if (error) {
+                    setMessage({ type: 'error', text: `发送重置邮件失败: ${error.message}` })
                 } else {
-                    setMessage({ type: 'error', text: `登录出错: ${error.message}` })
+                    setMessage({ type: 'success', text: '密码重置验证码已发送至您的邮箱！' })
+                    setStep('verify')
                 }
             } else {
-                // 登录成功，直接挑战
-                router.push(next)
-                router.refresh()
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                })
+
+                if (error) {
+                    if (error.message.includes('Email not confirmed')) {
+                        setMessage({ type: 'error', text: `邮箱未验证，请先验证。` })
+                        const { error: resendError } = await supabase.auth.resend({
+                            type: 'signup',
+                            email: email
+                        })
+                        if (!resendError) setStep('verify')
+                    } else {
+                        setMessage({ type: 'error', text: `登录出错: ${error.message}` })
+                    }
+                } else {
+                    router.push(next)
+                    router.refresh()
+                }
             }
+        } catch (error: any) {
+            console.error("Auth Exception:", error)
+            setMessage({ type: 'error', text: `系统错误: ${error.message || String(error)}` })
+            if (String(error).includes('supabaseUrl')) {
+                setMessage({ type: 'error', text: '环境变量丢失！请检查服务器根目录是否遗漏了 .env.local 并重新启动项目！' })
+            }
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -105,40 +104,42 @@ function AuthForm() {
         setLoading(true)
         setMessage({ type: '', text: '' })
 
-        const supabase = createClient()
-
-        // 验证验证码 (区分注册与密码找回)
-        const { error } = await supabase.auth.verifyOtp({
-            email,
-            token: otpToken,
-            type: mode === 'reset' ? 'recovery' : 'signup'
-        })
-
-        if (error) {
-            setMessage({ type: 'error', text: `验证失败: ${error.message}` })
-            setLoading(false)
-            return
-        }
-
-        if (mode === 'reset') {
-            // 如果是密码重置模式，验证成功后（此时已被授予临时会话），更新新密码
-            const { error: updateError } = await supabase.auth.updateUser({
-                password: newPassword
+        try {
+            const supabase = createClient()
+            const { error } = await supabase.auth.verifyOtp({
+                email,
+                token: otpToken,
+                type: mode === 'reset' ? 'recovery' : 'signup'
             })
 
-            if (updateError) {
-                setMessage({ type: 'error', text: `密码更新失败: ${updateError.message}` })
+            if (error) {
+                setMessage({ type: 'error', text: `验证失败: ${error.message}` })
+                return
+            }
+
+            if (mode === 'reset') {
+                const { error: updateError } = await supabase.auth.updateUser({
+                    password: newPassword
+                })
+
+                if (updateError) {
+                    setMessage({ type: 'error', text: `密码更新失败: ${updateError.message}` })
+                } else {
+                    setMessage({ type: 'success', text: '密码重置成功！正在进入...' })
+                    router.push(next)
+                    router.refresh()
+                }
             } else {
-                setMessage({ type: 'success', text: '密码重置成功！正在进入...' })
+                setMessage({ type: 'success', text: '验证成功！正在进入...' })
                 router.push(next)
                 router.refresh()
             }
-        } else {
-            setMessage({ type: 'success', text: '验证成功！正在进入...' })
-            router.push(next)
-            router.refresh()
+        } catch (error: any) {
+            console.error("Verify Exception:", error)
+            setMessage({ type: 'error', text: `系统错误: ${error.message || String(error)}` })
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     return (
