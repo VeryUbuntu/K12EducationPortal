@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import Link from 'next/link'
 import { addSlide, deleteSlide } from './actions'
 import * as LucideIcons from 'lucide-react'
 
@@ -82,7 +83,12 @@ export default async function CarouselAdminPage() {
                                     <p className="text-sm text-slate-500 line-clamp-1">{slide.description}</p>
                                     <p className="text-xs text-slate-400 mt-2">链接：{slide.link_url} | 排序：{slide.sort_order}</p>
                                 </div>
-                                <div className="flex justify-end mt-4">
+                                <div className="flex justify-end gap-2 mt-4">
+                                    <Link href={`/admin/carousel/${slide.id}/edit`}>
+                                        <Button variant="outline" size="sm">
+                                            <LucideIcons.Edit className="w-4 h-4 mr-1" /> 修改
+                                        </Button>
+                                    </Link>
                                     <form action={async () => {
                                         'use server'
                                         await deleteSlide(slide.id)
