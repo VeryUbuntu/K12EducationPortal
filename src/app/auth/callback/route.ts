@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
-    const host = request.headers.get('host') ?? 'localhost:3000'
+    const host = request.headers.get('host') ?? 'localhost:3001'
     const protocol = request.headers.get('x-forwarded-proto') ?? 'http'
     const origin = `${protocol}://${host}`
 
