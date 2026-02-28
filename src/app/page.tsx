@@ -39,7 +39,7 @@ export default async function HomePage() {
       {/* Stage Selector */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold tracking-tight">🎓 选择学习阶段</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {stages?.map(stage => (
             <Link href={`/${stage.slug}`} key={stage.id} className="block group">
               <Card className="h-full group-hover:shadow-lg transition-all group-hover:-translate-y-1 group-hover:border-primary">
@@ -52,6 +52,19 @@ export default async function HomePage() {
               </Card>
             </Link>
           ))}
+          <Link href="/eduflow" className="block group">
+            <Card className="h-full bg-slate-900 text-white group-hover:shadow-lg transition-all group-hover:-translate-y-1 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <CardHeader className="relative z-10">
+                <CardTitle className="text-2xl text-center pb-2 border-b-2 border-transparent group-hover:border-blue-400 inline-block transition-colors drop-shadow-md">
+                  Eduflow 智能学伴
+                </CardTitle>
+                <CardDescription className="text-center pt-2 text-slate-300">
+                  AI 知识卡片与流式学习
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
         </div>
       </section>
     </div>
