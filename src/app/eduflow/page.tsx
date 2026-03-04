@@ -164,8 +164,9 @@ function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefres
   const colorClass = SUBJECT_COLORS[card.subject] || SUBJECT_COLORS["通用"];
   const badgeColorClass = SUBJECT_BADGE_COLORS[card.subject] || SUBJECT_BADGE_COLORS["通用"];
 
-  const handleRefreshClick = async (e: React.MouseEvent) => {
+  const handleRefreshClick = async (e: React.MouseEvent | React.PointerEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     try {
       setIsSpinning(true);
       await onRefresh(card.subject);
@@ -199,8 +200,8 @@ function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefres
             variant="ghost"
             size="icon"
             className="hover:bg-slate-100 h-8 w-8"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={handleRefreshClick}
+            onPointerDown={(e) => { e.stopPropagation(); }}
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleRefreshClick(e); }}
             title="刷新此卡片"
           >
             <RefreshCcw size={14} className={cn("text-slate-500", isSpinning && "animate-spin")} />
@@ -321,11 +322,18 @@ export default function Home() {
         body: JSON.stringify({
           content: card.content,
           subject: card.subject,
-          user_id: currentUser.id
+          grade: currentUser.grade || "通用",
+          phase: currentUser.phase || "通用"
         })
       });
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("explain-card API error:", res.status, errText);
+        setExplainContent("AI 详解失败，请稍后再试。");
+        return;
+      }
       const data = await res.json();
-      setExplainContent(data.explanation);
+      setExplainContent(data.explanation || "AI 未返回详解内容，请重试。");
     } catch (e) {
       console.error(e);
       setExplainContent("抱歉，获取详解失败，请稍后再试。");

@@ -367,18 +367,21 @@ class KnowledgeService:
         if not self.client:
             return "智能助手暂不可用，请配置 API Key。"
         try:
+            # Trim content to avoid exceeding context limits or slow requests
+            trimmed = content[:800]
             response = self.client.chat.completions.create(
                 model="Qwen/Qwen2.5-72B-Instruct", 
                 messages=[
-                    {"role": "system", "content": f"You are an expert {subject} tutor for {phase} {grade} students."},
-                    {"role": "user", "content": f"Please explain the following {subject} concept in detail.\n\nConcept: '{content}'\n\nRequirements:\n1. Explain ONLY this concept.\n2. Use clear, encouraging language suitable for {grade}.\n3. Include examples/formulas if applicable.\n4. Output in Markdown. IMPORTANT: You MUST enclose ALL math formulas/symbols in $...$ (inline) or $$...$$ (block) for LaTeX rendering."}
+                    {"role": "system", "content": f"你是一位专为{phase}{grade}学生服务的资深{subject}科家庭老师，擅长用透彻易懂、换位思考的方式辨析知识。"},
+                    {"role": "user", "content": f"请对以下这个{subject}知识区块做一份深度详解，包括：\n1. 详细让概念和公式达到「披山鲁甩就明白」的效果\n2. 1-2个典型例题+详解过程\n3. 常见错误和记忆技巧\n4. LaTeX公式封装：内联用`$`，块式用`$$`\n\n知识点内容：{trimmed}"}
                 ],
-                timeout=60,
+                timeout=90,
                 temperature=0.7
             )
             return response.choices[0].message.content
         except Exception as e:
-            return "抱歉，生成详解时遇到问题，请稍后再试。"
+            print(f"Explain failed: {e}")
+            return f"抱歉，详解生成失败：{str(e)[:100]}。请稍后再试。"
 
 knowledge_service = KnowledgeService()
 
@@ -569,11 +572,11 @@ def set_user_goal(user_id: int, goal_in: GoalCreate, db: Session = Depends(get_d
     return GoalResponse(id=new_goal.id, description=new_goal.description, target_date=new_goal.target_date)
 
 @app.post("/api/explain-card")
-def explain_card(req: ExplainRequest, auth_id: str = Depends(get_current_user_uuid)):
+def explain_card(req: ExplainRequest):
     return {"explanation": knowledge_service.explain(req.content, req.subject, req.grade, req.phase)}
 
 @app.post("/api/syllabus", response_model=List[str])
-def get_syllabus(req: SyllabusRequest, db: Session = Depends(get_db), auth_id: str = Depends(get_current_user_uuid)):
+def get_syllabus(req: SyllabusRequest, db: Session = Depends(get_db)):
     # 1. Check Global Syllabus Registry
     cached = db.query(GlobalSyllabusRegistry).filter(
         GlobalSyllabusRegistry.phase == req.phase,
@@ -608,7 +611,7 @@ def get_syllabus(req: SyllabusRequest, db: Session = Depends(get_db), auth_id: s
     return units
 
 @app.post("/api/syllabus/save")
-def save_syllabus(req: SyllabusSaveRequest, db: Session = Depends(get_db), auth_id: str = Depends(get_current_user_uuid)):
+def save_syllabus(req: SyllabusSaveRequest, db: Session = Depends(get_db)):
     # Upsert logic
     cached = db.query(GlobalSyllabusRegistry).filter(
         GlobalSyllabusRegistry.phase == req.phase,
