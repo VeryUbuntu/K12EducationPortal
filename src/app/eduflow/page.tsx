@@ -14,7 +14,7 @@ import { format, differenceInCalendarDays } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { getToken, removeToken, setDevToken } from "@/lib/auth";
-import { Loader2, Plus, RefreshCcw, Pencil, Target, BookOpen, LogOut, UserCircle, Trash2, Settings } from "lucide-react";
+import { Loader2, Plus, RefreshCcw, Pencil, Target, BookOpen, LogOut, UserCircle, Trash2, Settings, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -284,6 +284,8 @@ export default function Home() {
   });
   const [progressSyllabusLoading, setProgressSyllabusLoading] = useState<Record<string, boolean>>({});
   const [progressSyllabusOptions, setProgressSyllabusOptions] = useState<Record<string, string[]>>({});
+  const [editingSyllabusOf, setEditingSyllabusOf] = useState<string | null>(null);
+  const [editingSyllabusContent, setEditingSyllabusContent] = useState<string>("");
 
   const [snowEnabled, setSnowEnabled] = useState(false);
 
@@ -528,12 +530,41 @@ export default function Home() {
       });
       if (res.ok) {
         const data = await res.json();
-        setProgressSyllabusOptions(prev => ({ ...prev, [subject]: data }));
+        if (Array.isArray(data)) {
+          setProgressSyllabusOptions(prev => ({ ...prev, [subject]: data }));
+        }
       }
     } catch (e) {
       console.error(e);
     } finally {
       setProgressSyllabusLoading(prev => ({ ...prev, [subject]: false }));
+    }
+  };
+
+  const saveCorrectedSyllabus = async (subject: string) => {
+    if (!currentUser || !currentUser.grade || !currentUser.phase) return;
+    const cleanUnits = editingSyllabusContent.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    setProgressSyllabusOptions(prev => ({ ...prev, [subject]: cleanUnits }));
+    setEditingSyllabusOf(null);
+
+    // Save to server
+    try {
+      const token = getToken();
+      const version = currentUser.textbook_versions?.[subject] || (SUBJECT_VERSIONS[subject] ? SUBJECT_VERSIONS[subject][0] : "通用版");
+      await fetch("/eduflow/api/syllabus/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({
+          phase: currentUser.phase,
+          grade: currentUser.grade,
+          semester: progressForm.semester,
+          subject,
+          version,
+          units: cleanUnits
+        })
+      });
+    } catch (e) {
+      console.error("Failed to save syllabus to registry", e);
     }
   };
 
@@ -1104,48 +1135,82 @@ export default function Home() {
                 </div>
                 <div className="flex flex-col gap-3">
                   {currentUser?.subjects.map(s => (
-                    <div key={s} className="p-4 rounded-xl border bg-white border-slate-200/60 shadow-sm transition-all">
-                      <div className="flex items-center justify-between mb-2">
+                    <div key={s} className="p-4 rounded-xl border bg-white border-slate-200/60 shadow-sm transition-all relative overflow-hidden group/subject">
+                      <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-50">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-base text-slate-700">{s}</span>
                           <span className="text-xs text-slate-400">({currentUser.textbook_versions?.[s] || "通用版本"})</span>
                         </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-8 text-xs bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800"
-                          onClick={() => fetchSyllabusForProgress(s)}
-                          disabled={progressSyllabusLoading[s]}
-                        >
-                          {progressSyllabusLoading[s] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCcw className="mr-1 h-3 w-3" />} 重新获取
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs text-slate-400 hover:text-indigo-600 px-2"
+                            onClick={() => {
+                              if (editingSyllabusOf === s) {
+                                setEditingSyllabusOf(null);
+                              } else {
+                                setEditingSyllabusOf(s);
+                                setEditingSyllabusContent((progressSyllabusOptions[s] || []).join("\n"));
+                              }
+                            }}
+                          >
+                            <Pencil className="mr-1 h-3 w-3" /> 编辑纠错
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800"
+                            onClick={() => fetchSyllabusForProgress(s)}
+                            disabled={progressSyllabusLoading[s]}
+                          >
+                            {progressSyllabusLoading[s] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCcw className="mr-1 h-3 w-3" />} 重新获取
+                          </Button>
+                        </div>
                       </div>
 
-                      {progressSyllabusOptions[s] && (
-                        <div className="mt-3 max-h-48 overflow-y-auto bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-2">
-                          {progressSyllabusOptions[s].map((unit, idx) => {
-                            const isChecked = (progressForm.learning_units[s] || []).includes(unit);
-                            return (
-                              <div
-                                key={idx}
-                                className={cn(
-                                  "flex items-start space-x-3 p-2 rounded-md transition-colors hover:bg-white cursor-pointer group",
-                                  isChecked ? "bg-white border-indigo-100 shadow-[0_2px_8px_-4px_rgba(99,102,241,0.3)] border" : "border border-transparent"
-                                )}
-                                onClick={() => toggleProgressUnit(s, unit)}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  readOnly
-                                  className="mt-0.5 h-[1.125rem] w-[1.125rem] text-indigo-600 rounded-md border-slate-300 focus:ring-indigo-500 pointer-events-none"
-                                />
-                                <Label className="text-sm text-slate-700 leading-snug cursor-pointer group-hover:text-slate-900 group-active:text-slate-900">{unit}</Label>
-                              </div>
-                            )
-                          })}
+                      {editingSyllabusOf === s ? (
+                        <div className="mt-3 bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
+                          <p className="text-xs text-indigo-600 mb-2 font-medium">✏️ 每行代表一个单元/章节。您可以任意增删改！(您的更正将反哺整个社区)</p>
+                          <textarea
+                            className="w-full text-sm p-3 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 min-h-[150px] font-sans text-slate-700 bg-white"
+                            value={editingSyllabusContent}
+                            onChange={(e) => setEditingSyllabusContent(e.target.value)}
+                          />
+                          <div className="flex justify-end mt-2">
+                            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm" onClick={() => saveCorrectedSyllabus(s)}>
+                              <Check className="w-3 h-3 mr-1" /> 保存更正并上报
+                            </Button>
+                          </div>
                         </div>
+                      ) : (
+                        progressSyllabusOptions[s] && (
+                          <div className="mt-3 max-h-48 overflow-y-auto bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-2">
+                            {progressSyllabusOptions[s].map((unit, idx) => {
+                              const isChecked = (progressForm.learning_units[s] || []).includes(unit);
+                              return (
+                                <div
+                                  key={idx}
+                                  className={cn(
+                                    "flex items-start space-x-3 p-2 rounded-md transition-colors hover:bg-white cursor-pointer group",
+                                    isChecked ? "bg-white border-indigo-100 shadow-[0_2px_8px_-4px_rgba(99,102,241,0.3)] border" : "border border-transparent"
+                                  )}
+                                  onClick={() => toggleProgressUnit(s, unit)}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    readOnly
+                                    className="mt-0.5 h-[1.125rem] w-[1.125rem] text-indigo-600 rounded-md border-slate-300 focus:ring-indigo-500 pointer-events-none"
+                                  />
+                                  <Label className="text-sm text-slate-700 leading-snug cursor-pointer group-hover:text-slate-900 group-active:text-slate-900">{unit}</Label>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )
                       )}
                     </div>
                   ))}
