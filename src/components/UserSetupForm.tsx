@@ -20,12 +20,16 @@ export function UserSetupForm({ onComplete }: { onComplete: () => void }) {
     const [phase, setPhase] = useState("初中");
     const [grade, setGrade] = useState("");
     const [province, setProvince] = useState("山东");
+    const [semester, setSemester] = useState("下学期");
+    const [month, setMonth] = useState("第1个月");
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
     const [textbookVersions, setTextbookVersions] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
 
     const PHASES = ["小学", "初中", "高中"];
     const PROVINCES = ["北京", "上海", "天津", "重庆", "河北", "山西", "辽宁", "吉林", "黑龙江", "江苏", "浙江", "安徽", "福建", "江西", "山东", "河南", "湖北", "湖南", "广东", "海南", "四川", "贵州", "云南", "陕西", "甘肃", "青海", "台湾", "内蒙古", "广西", "西藏", "宁夏", "新疆"];
+    const SEMESTERS = ["上学期", "下学期"];
+    const MONTHS = ["第1个月", "第2个月", "第3个月", "第4个月", "期末冲刺"];
 
     // Compute dynamic subjects based on the selected phase
     const availableSubjects = phase === "小学"
@@ -79,6 +83,8 @@ export function UserSetupForm({ onComplete }: { onComplete: () => void }) {
                     phase,
                     grade,
                     province,
+                    semester,
+                    month,
                     subjects: selectedSubjects.length > 0 ? selectedSubjects : ["通用"],
                     textbook_versions: textbookVersions
                 })
@@ -159,6 +165,32 @@ export function UserSetupForm({ onComplete }: { onComplete: () => void }) {
                                 onChange={e => setGrade(e.target.value)}
                                 className="h-12 bg-slate-50 border-transparent focus:bg-white focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100 transition-all rounded-xl shadow-sm text-base"
                             />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-slate-700 font-bold">当前学期进度</Label>
+                            <Select value={semester} onValueChange={setSemester}>
+                                <SelectTrigger className="h-12 bg-slate-50 border-transparent focus:bg-white focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100 rounded-xl shadow-sm text-base">
+                                    <SelectValue placeholder="选择学期" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {SEMESTERS.map(p => (
+                                        <SelectItem key={p} value={p}>{p}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-slate-700 font-bold">学习进度 (月度节点)</Label>
+                            <Select value={month} onValueChange={setMonth}>
+                                <SelectTrigger className="h-12 bg-slate-50 border-transparent focus:bg-white focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100 rounded-xl shadow-sm text-base">
+                                    <SelectValue placeholder="选择当前月度阶段" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {MONTHS.map(p => (
+                                        <SelectItem key={p} value={p}>{p}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
 

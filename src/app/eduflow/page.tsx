@@ -1065,27 +1065,36 @@ export default function Home() {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6 py-4">
-              <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm flex items-center gap-6">
-                <div className="space-y-1.5 flex-1">
-                  <Label className="text-indigo-800 font-bold text-sm">当前学期</Label>
-                  <select
-                    className="w-full h-10 px-3 py-2 rounded-lg border-transparent bg-white text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium shadow-sm"
-                    value={progressForm.semester}
-                    onChange={(e) => setProgressForm({ ...progressForm, semester: e.target.value })}
-                  >
-                    {SEMESTERS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
+              <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm flex flex-col gap-4">
+                <div className="flex items-center gap-6">
+                  <div className="space-y-1.5 flex-1">
+                    <Label className="text-indigo-800 font-bold text-sm">当前学期</Label>
+                    <select
+                      className="w-full h-10 px-3 py-2 rounded-lg border-transparent bg-white text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium shadow-sm"
+                      value={progressForm.semester}
+                      onChange={(e) => setProgressForm({ ...progressForm, semester: e.target.value })}
+                    >
+                      {SEMESTERS.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5 flex-1">
+                    <Label className="text-indigo-800 font-bold text-sm">学习月度</Label>
+                    <select
+                      className="w-full h-10 px-3 py-2 rounded-lg border-transparent bg-white text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium shadow-sm"
+                      value={progressForm.month}
+                      onChange={(e) => setProgressForm({ ...progressForm, month: e.target.value })}
+                    >
+                      {MONTHS.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
                 </div>
-                <div className="space-y-1.5 flex-1">
-                  <Label className="text-indigo-800 font-bold text-sm">学习月度</Label>
-                  <select
-                    className="w-full h-10 px-3 py-2 rounded-lg border-transparent bg-white text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium shadow-sm"
-                    value={progressForm.month}
-                    onChange={(e) => setProgressForm({ ...progressForm, month: e.target.value })}
-                  >
-                    {MONTHS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </div>
+                <Button
+                  type="button"
+                  onClick={() => currentUser?.subjects.forEach(s => fetchSyllabusForProgress(s))}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 rounded-lg shadow-md transition-all active:scale-[0.98]"
+                >
+                  <RefreshCcw className="w-4 h-4 mr-2" /> 应用新进度并同步获取本学期各大纲
+                </Button>
               </div>
 
               <div className="space-y-4">
@@ -1109,7 +1118,7 @@ export default function Home() {
                           onClick={() => fetchSyllabusForProgress(s)}
                           disabled={progressSyllabusLoading[s]}
                         >
-                          {progressSyllabusLoading[s] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null} 拉取当前学年全部大纲
+                          {progressSyllabusLoading[s] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCcw className="mr-1 h-3 w-3" />} 重新获取
                         </Button>
                       </div>
 

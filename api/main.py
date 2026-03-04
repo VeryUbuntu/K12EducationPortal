@@ -241,17 +241,25 @@ class KnowledgeService:
         if not self.client:
             return ["智能助手未配置，无法生成单元列表。"]
         try:
+            # Helper to map semester to book volume implicitly
+            volume_kw = ""
+            if "上" in semester:
+                volume_kw = "（即：对应教材的上册/必修一等上半学年内容）"
+            elif "下" in semester:
+                volume_kw = "（即：对应教材的下册/必修二等下半学年内容）"
+
             if subject in ["编程基础", "综合", "AI"]:
                 prompt = (
                     f"作为课程设计专家，请为【{phase}】【{grade}】的【{subject}】课程设计一个标准的教学大纲。\n"
-                    f"任务：列出该【{semester}】合理范围内的课本章/单元目录。\n"
+                    f"任务：列出该【{semester}】{volume_kw}合理范围内的课本章/单元目录。请勿超出该半个学期的范围。\n"
                     f"请严格输出一个 JSON 格式的字符串数组（List of strings），列表中的每一项是该课程的一章或一个单元的名称。\n"
                     f"请不要输出任何Markdown格式标注、不要多余解释，唯一输出结果必须是可以被直接 `json.loads` 解析的合法 JSON 数组。"
                 )
             else:
                 prompt = (
                     f"请作为教材目录检索专家，基于开源的 'TapXWorld/ChinaTextbook' 中国小初高大教材数据库信息进行梳理。\n"
-                    f"任务：列出【{phase}】【{grade}】【{semester}】使用的【{subject}】【{version}】的课本章/单元目录。\n"
+                    f"任务：列出【{phase}】【{grade}】【{semester}】{volume_kw}使用的【{subject}】【{version}】的课本章/单元目录。\n"
+                    f"注意：必须严格根据【{semester}】返回对应半个学年的单元内容，绝不能返回整个学年（上下册）的全部章。\n"
                     f"请严格输出一个 JSON 格式的字符串数组（List of strings），列表中的每一项是该教材的一章或一个单元的名称（如：'第一章 有理数', '第二章 整式的加减'）。\n"
                     f"请不要输出任何Markdown格式标注、不要多余解释，唯一输出结果必须是可以被直接 `json.loads` 解析的合法 JSON 数组。"
                 )
