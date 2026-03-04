@@ -176,10 +176,13 @@ function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefres
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="w-full h-full">
-      <div className={cn(
-        "max-h-[380px] rounded-xl p-5 shadow-sm hover:shadow-md border flex flex-col gap-3 bg-white transition-all duration-200 group relative select-none",
-        colorClass.split(" ")[1],
-      )}>
+      <div
+        className={cn(
+          "max-h-[380px] rounded-xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-indigo-200 border flex flex-col gap-3 bg-white transition-all duration-300 group relative select-none cursor-pointer",
+          colorClass.split(" ")[1],
+        )}
+        onClick={() => onExplain(card)}
+      >
         {/* Actions: Refresh & Explain */}
         <div className="absolute top-4 right-4 flex gap-1 z-10 opacity-30 group-hover:opacity-100 transition-opacity duration-200">
           <Button
@@ -213,7 +216,7 @@ function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefres
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col justify-start items-start text-left py-2 px-1 cursor-grab active:cursor-grabbing w-full overflow-hidden relative">
+        <div className="flex-1 flex flex-col justify-start items-start text-left py-2 px-1 w-full overflow-hidden relative">
           <div className="w-full prose prose-sm prose-slate max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkMath]}
