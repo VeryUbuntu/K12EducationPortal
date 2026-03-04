@@ -451,7 +451,8 @@ def generate_cards(user_id: int, current_date: str, ignore_cache: bool = False, 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    date_obj = datetime.strptime(current_date, "%Y-%m-%d").date()
+    # Use the string form of date for SQLite comparison (CalendarEntry.date is stored as string)
+    date_str = current_date  # e.g. "2026-03-05"
     cards_response = []
     
     recent_entries = db.query(CalendarEntry).filter(CalendarEntry.user_id == user_id).order_by(CalendarEntry.id.desc()).limit(30).all()
@@ -467,7 +468,7 @@ def generate_cards(user_id: int, current_date: str, ignore_cache: bool = False, 
     for subject in user_subjects_list:
         existing_entry = db.query(CalendarEntry).filter(
             CalendarEntry.user_id == user.id, 
-            CalendarEntry.date == date_obj,
+            CalendarEntry.date == date_str,  # Use string comparison
             CalendarEntry.subject == subject
         ).first()
         
@@ -502,7 +503,7 @@ def generate_cards(user_id: int, current_date: str, ignore_cache: bool = False, 
         for subject in user_subjects_list:
             if subject in results_map:
                 content = results_map[subject]
-                new_entry = CalendarEntry(date=date_obj, content=content, subject=subject, user_id=user.id)
+                new_entry = CalendarEntry(date=date_str, content=content, subject=subject, user_id=user.id)
                 db.add(new_entry)
                 db.commit()
                 db.refresh(new_entry)
@@ -528,11 +529,11 @@ def regenerate_single_card(user_id: int, subject: str, current_date: str, db: Se
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    date_obj = datetime.strptime(current_date, "%Y-%m-%d").date()
+    date_str = current_date  # Use string for SQLite comparison
     recent_entries = db.query(CalendarEntry).filter(CalendarEntry.user_id == user_id).order_by(CalendarEntry.id.desc()).limit(30).all()
     exclude_topics = [extract_topic(e.content) for e in recent_entries]
     
-    existing = db.query(CalendarEntry).filter(CalendarEntry.user_id == user.id, CalendarEntry.date == date_obj, CalendarEntry.subject == subject).first()
+    existing = db.query(CalendarEntry).filter(CalendarEntry.user_id == user.id, CalendarEntry.date == date_str, CalendarEntry.subject == subject).first()
     if existing:
         db.delete(existing)
         db.commit()
@@ -550,7 +551,7 @@ def regenerate_single_card(user_id: int, subject: str, current_date: str, db: Se
     target_units = units_map.get(subject, [])
 
     content = knowledge_service.generate(subject, user.phase, user.grade, user.province, tb_version, semester=user.semester, month=user.month, learning_units=target_units, current_date=current_date, exclude_topics=exclude_topics)
-    new_entry = CalendarEntry(date=date_obj, content=content, subject=subject, user_id=user.id)
+    new_entry = CalendarEntry(date=date_str, content=content, subject=subject, user_id=user.id)
     db.add(new_entry)
     db.commit()
     db.refresh(new_entry)
