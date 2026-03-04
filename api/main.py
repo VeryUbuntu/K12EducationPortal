@@ -257,8 +257,9 @@ class KnowledgeService:
                 )
             else:
                 prompt = (
-                    f"请作为教材目录检索专家，基于开源的 'TapXWorld/ChinaTextbook' 中国小初高大教材数据库信息进行梳理。\n"
-                    f"任务：列出【{phase}】【{grade}】【{semester}】{volume_kw}使用的【{subject}】【{version}】的课本章/单元目录。\n"
+                    f"作为深谙中国中小学义务教育及高中教材体系的资深教研专家，请凭借你的内部知识严格回忆。\n"
+                    f"任务：列出【{phase}】【{grade}】【{semester}】{volume_kw}使用的【{subject}】【{version}】课本的官方原版章/单元目录。\n"
+                    f"⚠ 极度重要警告：绝对不准混淆年级和上下册！例如：初二（八年级）下册的人教版数学开篇通常是《二次根式》等，而《几何图形初步》是七年级上册内容。请你务必仔细区分【{grade}】和【{semester}】，确保单元列表精准吻合。\n"
                     f"注意：必须严格根据【{semester}】返回对应半个学年的单元内容，绝不能返回整个学年（上下册）的全部章。\n"
                     f"请严格输出一个 JSON 格式的字符串数组（List of strings），列表中的每一项是该教材的一章或一个单元的名称（如：'第一章 有理数', '第二章 整式的加减'）。\n"
                     f"请不要输出任何Markdown格式标注、不要多余解释，唯一输出结果必须是可以被直接 `json.loads` 解析的合法 JSON 数组。"
@@ -287,8 +288,8 @@ class KnowledgeService:
             else:
                 progress = get_semester_progress(current_date or datetime.now().strftime("%Y-%m-%d"))
             
-            # Step 1: "Search" TapXWorld/ChinaTextbook for the Syllabus Chapter
-            search_prompt = f"请作为教材目录检索系统，在开源的 'TapXWorld/ChinaTextbook' 中国小初高大学教材数据库中进行检索。\n"
+            # Step 1: "Search" actual chapter from internal knowledge
+            search_prompt = f"作为深谙中国中小学义务教育及高中教材体系的资深教研专家，请准确回忆该版本教材的知识点排布。\n"
             search_prompt += f"任务：查找【{province}】地区【{phase}{grade}】使用的【{subject}】【{textbook_version}】的课本大纲。\n"
             search_prompt += f"结合当前的教学进度节点：【{progress}】（当前系统日期：{current_date}）。\n"
             if learning_units and len(learning_units) > 0:
@@ -311,7 +312,7 @@ class KnowledgeService:
                     
                     # 2. Generate Card
                     generate_system = f"你是一名为中国大陆{province}的{phase}{grade}学生提供每日学习卡片的AI家教专家。"
-                    generate_user = f"经 'TapXWorld/ChinaTextbook' 教材库大纲匹配，该生今天应学习的教材进度对应章节是：【{chapter_target}】（科目：{subject}，版本：{textbook_version}）。\n"
+                    generate_user = f"根据国家最新教材大纲，该生今天应学习的阶段对应章节/知识点是：【{chapter_target}】（年级：{grade}，科目：{subject}，版本：{textbook_version}）。\n"
                     generate_user += "请提取该小节中的一个重点，生成一张今天的知识卡片。\n"
                     generate_user += "要求包含：核心概念讲解、一个典型例题（如果适用）、和简要解析。\n"
                     generate_user += "格式与排版要求：\n"
