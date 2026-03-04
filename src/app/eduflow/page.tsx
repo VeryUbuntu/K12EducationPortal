@@ -177,7 +177,7 @@ function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefres
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="w-full h-full">
       <div className={cn(
-        "h-full min-h-[200px] rounded-xl p-5 shadow-sm hover:shadow-md border flex flex-col gap-3 bg-white transition-all duration-200 group relative select-none",
+        "max-h-[380px] rounded-xl p-5 shadow-sm hover:shadow-md border flex flex-col gap-3 bg-white transition-all duration-200 group relative select-none",
         colorClass.split(" ")[1],
       )}>
         {/* Actions: Refresh & Explain */}
@@ -213,20 +213,23 @@ function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefres
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col justify-center items-start text-left py-4 px-1 cursor-grab active:cursor-grabbing w-full">
+        <div className="flex-1 flex flex-col justify-start items-start text-left py-2 px-1 cursor-grab active:cursor-grabbing w-full overflow-hidden relative">
           <div className="w-full prose prose-sm prose-slate max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeKatex]}
               components={{
-                h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-slate-900 mb-3 leading-snug w-full" {...props} />,
+                h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-slate-900 mb-2 leading-snug w-full line-clamp-2" {...props} />,
                 strong: ({ node, ...props }) => <strong className="font-bold text-slate-800" {...props} />,
-                p: ({ node, ...props }) => <p className="text-[15px] text-slate-600 leading-relaxed font-normal w-full whitespace-pre-line hyphens-auto mt-2" {...props} />
+                p: ({ node, ...props }) => <p className="text-[14px] text-slate-600 leading-relaxed font-normal w-full whitespace-pre-line hyphens-auto mt-1 line-clamp-6" {...props} />,
+                ul: ({ node, ...props }) => <ul className="pl-4 list-disc text-[14px] text-slate-600 mt-1 line-clamp-6 space-y-1" {...props} />,
+                ol: ({ node, ...props }) => <ol className="pl-4 list-decimal text-[14px] text-slate-600 mt-1 line-clamp-6 space-y-1" {...props} />,
               }}
             >
               {processLatex(card.content).trim().replace(/^(?:#+\s*)?(?:\*\*?)?(?:概念概要名称[：:])?\s*(.*?)(?:\*\*?)?(?:\n|$)/i, '### $1\n\n')}
             </ReactMarkdown>
           </div>
+          <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-white to-transparent pointer-events-none" />
         </div>
 
         {/* Footer Decor */}
