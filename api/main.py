@@ -55,6 +55,16 @@ class CalendarEntry(Base):
     content = Column(Text)
     subject = Column(String)
 
+class GlobalSyllabusRegistry(Base):
+    __tablename__ = "global_syllabus_registry"
+    id = Column(Integer, primary_key=True, index=True)
+    phase = Column(String, index=True)
+    grade = Column(String, index=True)
+    semester = Column(String, index=True)
+    subject = Column(String, index=True)
+    version = Column(String, index=True)
+    units_json = Column(Text) # JSON string of chapters
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -198,6 +208,9 @@ class SyllabusRequest(BaseModel):
     subject: str
     version: str
     semester: str
+
+class SyllabusSaveRequest(SyllabusRequest):
+    units: List[str]
 
 # Knowledge Service
 def extract_topic(content: str) -> str:
@@ -556,12 +569,70 @@ def set_user_goal(user_id: int, goal_in: GoalCreate, db: Session = Depends(get_d
     return GoalResponse(id=new_goal.id, description=new_goal.description, target_date=new_goal.target_date)
 
 @app.post("/api/explain-card")
-def explain_card(req: ExplainRequest):
+def explain_card(req: ExplainRequest, auth_id: str = Depends(get_current_user_uuid)):
     return {"explanation": knowledge_service.explain(req.content, req.subject, req.grade, req.phase)}
 
 @app.post("/api/syllabus", response_model=List[str])
-def get_syllabus(req: SyllabusRequest, auth_id: str = Depends(get_current_user_uuid)):
-    return knowledge_service.get_syllabus_units(req.subject, req.phase, req.grade, req.version, req.semester)
+def get_syllabus(req: SyllabusRequest, db: Session = Depends(get_db), auth_id: str = Depends(get_current_user_uuid)):
+    # 1. Check Global Syllabus Registry
+    cached = db.query(GlobalSyllabusRegistry).filter(
+        GlobalSyllabusRegistry.phase == req.phase,
+        GlobalSyllabusRegistry.grade == req.grade,
+        GlobalSyllabusRegistry.semester == req.semester,
+        GlobalSyllabusRegistry.subject == req.subject,
+        GlobalSyllabusRegistry.version == req.version
+    ).first()
+    
+    if cached and cached.units_json:
+        try:
+            return json.loads(cached.units_json)
+        except:
+            pass
+            
+    # 2. If not found, fall back to LLM Generation
+    units = knowledge_service.get_syllabus_units(req.subject, req.phase, req.grade, req.version, req.semester)
+    
+    # 3. Save the initially auto-generated units to registry so users can edit later
+    if units and "智能助手未配置" not in units[0] and "获取目录出错" not in units[0]:
+        new_reg = GlobalSyllabusRegistry(
+            phase=req.phase,
+            grade=req.grade,
+            semester=req.semester,
+            subject=req.subject,
+            version=req.version,
+            units_json=json.dumps(units)
+        )
+        db.add(new_reg)
+        db.commit()
+        
+    return units
+
+@app.post("/api/syllabus/save")
+def save_syllabus(req: SyllabusSaveRequest, db: Session = Depends(get_db), auth_id: str = Depends(get_current_user_uuid)):
+    # Upsert logic
+    cached = db.query(GlobalSyllabusRegistry).filter(
+        GlobalSyllabusRegistry.phase == req.phase,
+        GlobalSyllabusRegistry.grade == req.grade,
+        GlobalSyllabusRegistry.semester == req.semester,
+        GlobalSyllabusRegistry.subject == req.subject,
+        GlobalSyllabusRegistry.version == req.version
+    ).first()
+    
+    if cached:
+        cached.units_json = json.dumps(req.units)
+    else:
+        new_reg = GlobalSyllabusRegistry(
+            phase=req.phase,
+            grade=req.grade,
+            semester=req.semester,
+            subject=req.subject,
+            version=req.version,
+            units_json=json.dumps(req.units)
+        )
+        db.add(new_reg)
+    
+    db.commit()
+    return {"status": "success"}
 
 if __name__ == "__main__":
     import uvicorn
