@@ -135,9 +135,14 @@ const SUBJECT_BADGE_COLORS: Record<string, string> = {
 
 // Latex rendering handled by ReactMarkdown + rehype-katex
 
+const processLatex = (text: string) => {
+  if (!text) return "";
+  return text.replace(/\\\([\s\S]*?\\\)/g, (match) => '$$' + match.slice(2, -2) + '$$').replace(/\\\[[\s\S]*?\\\]/g, (match) => '$$$$' + match.slice(2, -2) + '$$$$');
+};
+
 // --- Components ---
 
-function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefresh: (subject: string) => void, onExplain: (card: CardData) => void }) {
+function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefresh: (subject: string) => Promise<void>, onExplain: (card: CardData) => void }) {
   const {
     attributes,
     listeners,
@@ -159,11 +164,14 @@ function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefres
   const colorClass = SUBJECT_COLORS[card.subject] || SUBJECT_COLORS["通用"];
   const badgeColorClass = SUBJECT_BADGE_COLORS[card.subject] || SUBJECT_BADGE_COLORS["通用"];
 
-  const handleRefreshClick = (e: React.MouseEvent) => {
+  const handleRefreshClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsSpinning(true);
-    onRefresh(card.subject);
-    setTimeout(() => setIsSpinning(false), 3000);
+    try {
+      setIsSpinning(true);
+      await onRefresh(card.subject);
+    } finally {
+      setIsSpinning(false);
+    }
   };
 
   return (
@@ -216,7 +224,7 @@ function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefres
                 p: ({ node, ...props }) => <p className="text-[15px] text-slate-600 leading-relaxed font-normal w-full whitespace-pre-line hyphens-auto mt-2" {...props} />
               }}
             >
-              {card.content.trim().replace(/^(?:#+\s*)?(?:\*\*?)?(?:概念概要名称[：:])?\s*(.*?)(?:\*\*?)?(?:\n|$)/i, '### $1\n\n')}
+              {processLatex(card.content).trim().replace(/^(?:#+\s*)?(?:\*\*?)?(?:概念概要名称[：:])?\s*(.*?)(?:\*\*?)?(?:\n|$)/i, '### $1\n\n')}
             </ReactMarkdown>
           </div>
         </div>
@@ -1158,8 +1166,23 @@ export default function Home() {
               {/* Original Content */}
               <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
                 <p className="text-sm text-slate-500 mb-2 font-bold">原文知识点：</p>
-                <div className="text-slate-800 font-medium whitespace-pre-line">
-                  {currentExplainingCard?.content || ""}
+                <div className="prose prose-slate prose-sm max-w-none">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                    components={{
+                      p: (props) => <p className="mb-3 text-[15px] leading-7 text-slate-700 font-medium" {...props} />,
+                      strong: (props) => <strong className="font-bold text-slate-900" {...props} />,
+                      h1: (props) => <h3 className="mt-4 mb-2 text-base font-bold text-cyan-900" {...props} />,
+                      h2: (props) => <h3 className="mt-4 mb-2 text-base font-bold text-cyan-900" {...props} />,
+                      h3: (props) => <h3 className="mt-4 mb-2 text-base font-bold text-cyan-900" {...props} />,
+                      ul: (props) => <ul className="list-disc pl-5 mb-3 space-y-1 text-slate-700 font-medium" {...props} />,
+                      ol: (props) => <ol className="list-decimal pl-5 mb-3 space-y-1 text-slate-700 font-medium" {...props} />,
+                      li: (props) => <li className="text-[14px] leading-6" {...props} />,
+                    }}
+                  >
+                    {processLatex(currentExplainingCard?.content || "").trim().replace(/^(?:#+\s*)?(?:\*\*?)?(?:概念概要名称[：:])?\s*(.*?)(?:\*\*?)?(?:\n|$)/i, '### $1\n\n')}
+                  </ReactMarkdown>
                 </div>
               </div>
 
@@ -1187,7 +1210,7 @@ export default function Home() {
                         li: (props) => <li className="text-[14px] leading-6" {...props} />,
                       }}
                     >
-                      {explainContent}
+                      {processLatex(explainContent)}
                     </ReactMarkdown>
                   </div>
                 )}
