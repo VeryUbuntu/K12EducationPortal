@@ -216,7 +216,7 @@ function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefres
                 p: ({ node, ...props }) => <p className="text-[15px] text-slate-600 leading-relaxed font-normal w-full whitespace-pre-line hyphens-auto mt-2" {...props} />
               }}
             >
-              {card.content.replace(/概念概要名称：(.*?)(?:\n|$)/, '### $1\n')}
+              {card.content.trim().replace(/^(?:#+\s*)?(?:\*\*?)?(?:概念概要名称[：:])?\s*(.*?)(?:\*\*?)?(?:\n|$)/i, '### $1\n\n')}
             </ReactMarkdown>
           </div>
         </div>
@@ -1217,7 +1217,7 @@ export default function Home() {
                 items={dailyCards.map(c => c.id)}
                 strategy={rectSortingStrategy}
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-20 w-full mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20 w-full max-w-5xl mx-auto items-start">
                   {dailyCards.map((card) => (
                     <SortableCard
                       key={card.id}
