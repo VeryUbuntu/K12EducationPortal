@@ -176,38 +176,42 @@ function SortableCard({ card, onRefresh, onExplain }: { card: CardData, onRefres
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="w-full h-full">
+    <div ref={setNodeRef} style={style} {...attributes} className="w-full h-full relative">
+      {/* Action buttons sit OUTSIDE the DnD listener zone, so pointer events reach them unobstructed */}
+      <div className="absolute top-4 right-4 flex gap-1 z-20 opacity-30 group-hover:opacity-100 transition-opacity duration-200 group">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-slate-100 h-8 w-8"
+          onClick={() => onExplain(card)}
+          title="AI 详解"
+        >
+          <BookOpen size={14} className="text-slate-500" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-slate-100 h-8 w-8"
+          onClick={async (e) => {
+            e.stopPropagation();
+            setIsSpinning(true);
+            try { await onRefresh(card.subject); } finally { setIsSpinning(false); }
+          }}
+          title="刷新此卡片"
+        >
+          <RefreshCcw size={14} className={cn("text-slate-500", isSpinning && "animate-spin")} />
+        </Button>
+      </div>
+
+      {/* The entire card body is the DnD drag target + click-to-explain */}
       <div
+        {...listeners}
         className={cn(
           "max-h-[380px] rounded-xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-indigo-200 border flex flex-col gap-3 bg-white transition-all duration-300 group relative select-none cursor-pointer",
           colorClass.split(" ")[1],
         )}
         onClick={() => onExplain(card)}
       >
-        {/* Actions: Refresh & Explain */}
-        <div className="absolute top-4 right-4 flex gap-1 z-10 opacity-30 group-hover:opacity-100 transition-opacity duration-200">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:bg-slate-100 h-8 w-8"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => { e.stopPropagation(); onExplain(card); }}
-            title="AI 详解"
-          >
-            <BookOpen size={14} className="text-slate-500" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:bg-slate-100 h-8 w-8"
-            onPointerDown={(e) => { e.stopPropagation(); }}
-            onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleRefreshClick(e); }}
-            title="刷新此卡片"
-          >
-            <RefreshCcw size={14} className={cn("text-slate-500", isSpinning && "animate-spin")} />
-          </Button>
-        </div>
-
         {/* Header */}
         <div className="flex justify-between items-center pr-20 border-b border-dashed border-slate-100 pb-2">
           <Badge variant="outline" className={cn("border-none font-bold text-sm px-3 py-1 text-white shadow-md rounded-lg", badgeColorClass)}>
