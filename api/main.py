@@ -290,9 +290,16 @@ class KnowledgeService:
             else:
                 progress = get_semester_progress(current_date or datetime.now().strftime("%Y-%m-%d"))
             
+            volume_kw = ""
+            if "上" in semester:
+                volume_kw = "（即：对应教材的上册/必修一等上半学年内容）"
+            elif "下" in semester:
+                volume_kw = "（即：对应教材的下册/必修二等下半学年内容）"
+
             # Step 1: "Search" actual chapter from internal knowledge
             search_prompt = f"作为深谙中国中小学义务教育及高中教材体系的资深教研专家，请准确回忆该版本教材的知识点排布。\n"
-            search_prompt += f"任务：查找【{province}】地区【{phase}{grade}】使用的【{subject}】【{textbook_version}】的课本大纲。\n"
+            search_prompt += f"任务：确立【{province}】地区【{phase}】【{grade}】【{semester}】{volume_kw}使用的【{subject}】【{textbook_version}】课本的官方原版大纲范围。\n"
+            search_prompt += f"⚠ 极度重要警告：绝对不准混淆年级和上下册！你必须确保生成的知识点严格属于【{grade}】【{semester}】。例如初二（八年级）下册地理通常从中国四大地理区域（或北方南方）开始，不要拿七年级的内容来凑数！\n"
             search_prompt += f"结合当前的教学进度节点：【{progress}】（当前系统日期：{current_date}）。\n"
             if learning_units and len(learning_units) > 0:
                 search_prompt += f"用户已经指定了当前正在学习的单元内容范围：{', '.join(learning_units)}。请在这个范围内选择。\n"
